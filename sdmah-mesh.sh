@@ -2,29 +2,28 @@
 set -e
 
 IFACE="wlan0"
-MESH_IF="$IFACE"          # or create a separate interface if you prefer
 MESH_ID="sdmahmesh"
 FREQ="5180"
-BAT_IP="192.168.50.1/24"  # change on the other Pi
+BAT_IP="192.168.50.1/24"    # change to .2 on the second Pi
 
-# Clean up batman + wpa state
-batctl if del "$MESH_IF" 2>/dev/null || true
+# Free the interface
+batctl if del "$IFACE" 2>/dev/null || true
 
 systemctl stop wpa_supplicant 2>/dev/null || true
 pkill -f "wpa_supplicant.*$IFACE" 2>/dev/null || true
 
-ip link set "$IFACE" down 2>/dev/null || true
+iw dev p2p-dev-"$IFACE" del 2>/dev/null || true
 
-# 802.11s mesh point
-iw dev "$MESH_IF" set type mp
-ip link set "$MESH_IF" up
+ip link set "$IFACE" down || true
 
-# Join mesh. Some drivers require channel width options, but try the simple form first.
-iw dev "$MESH_IF" mesh join "$MESH_ID" freq "$FREQ"
+# Set IBSS
+iw dev "$IFACE" set type ibss
+ip link set "$IFACE" up
+iw dev "$IFACE" ibss join "$MESH_ID" "$FREQ"
 
-# Batman on top
+# Batman
 modprobe batman_adv
-batctl if add "$MESH_IF"
+batctl if add "$IFACE"
 ip link set up dev bat0
 
 # IP on bat0
