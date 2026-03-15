@@ -8,18 +8,15 @@ BAT_IP="192.168.50.1/24"    # change to .2 on the second Pi
 
 # Free the interface
 batctl if del "$IFACE" 2>/dev/null || true
-
 systemctl stop wpa_supplicant 2>/dev/null || true
 pkill -f "wpa_supplicant.*$IFACE" 2>/dev/null || true
-
 iw dev p2p-dev-"$IFACE" del 2>/dev/null || true
-
 ip link set "$IFACE" down || true
 
-# Set IBSS
-iw dev "$IFACE" set type ibss
+# Set mesh point
+iw dev "$IFACE" set type mp
 ip link set "$IFACE" up
-iw dev "$IFACE" ibss join "$MESH_ID" "$FREQ"
+iw dev "$IFACE" mesh join "$MESH_ID" freq "$FREQ"
 
 # Batman
 modprobe batman_adv
