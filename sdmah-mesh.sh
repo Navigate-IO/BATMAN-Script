@@ -2,7 +2,7 @@
 set -e
 IFACE="wlan0"
 MESH_ID="sdmahmesh"
-FREQ="5200"
+FREQ="5180"
 BAT_IP="192.168.50.1/24"    # change to .2 on the second Pi
 
 # Free the interface
