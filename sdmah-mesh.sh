@@ -1,9 +1,8 @@
 #!/bin/bash
 set -e
-
 IFACE="wlan0"
 MESH_ID="sdmahmesh"
-FREQ="5180"
+FREQ="5200"
 BAT_IP="192.168.50.1/24"    # change to .2 on the second Pi
 
 # Free the interface
@@ -13,10 +12,10 @@ pkill -f "wpa_supplicant.*$IFACE" 2>/dev/null || true
 iw dev p2p-dev-"$IFACE" del 2>/dev/null || true
 ip link set "$IFACE" down || true
 
-# Set mesh point
-iw dev "$IFACE" set type mp
+# Set IBSS (ad-hoc) mode
+iw dev "$IFACE" set type ibss
 ip link set "$IFACE" up
-iw dev "$IFACE" mesh join "$MESH_ID" freq "$FREQ"
+iw dev "$IFACE" ibss join "$MESH_ID" "$FREQ"
 
 # Batman
 modprobe batman_adv
