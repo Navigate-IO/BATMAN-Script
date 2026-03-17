@@ -18,14 +18,15 @@ pkill -f "wpa_supplicant.*$IFACE" 2>/dev/null || true
 iw dev p2p-dev-"$IFACE" del 2>/dev/null || true
 ip link set "$IFACE" down || true
 
-# Set S1G channel and bandwidth
-morsectrl channel -c "$S1G_FREQ" -o "$S1G_BW" -p 1 -n 0
-morsectrl bw "$S1G_BW"
-
 # Set IBSS (ad-hoc) mode
 iw dev "$IFACE" set type ibss
 ip link set "$IFACE" up
 iw dev "$IFACE" ibss join "$MESH_ID" "$FREQ"
+
+# Set S1G channel and bandwidth (must be after interface is up)
+sleep 2
+morsectrl channel -c "$S1G_FREQ" -o "$S1G_BW" -p 1 -n 0
+morsectrl bw "$S1G_BW"
 
 # Batman
 modprobe batman_adv
