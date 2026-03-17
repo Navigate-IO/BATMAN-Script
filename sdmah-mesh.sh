@@ -6,9 +6,9 @@ FREQ="5200"
 BAT_IP="192.168.50.1/24"    # change to .2 on the second Pi
 
 # S1G channel config — uncomment ONE line:
-S1G_FREQ=920500; S1G_BW=1   # 1MHz
+#S1G_FREQ=920500; S1G_BW=1   # 1MHz
 #S1G_FREQ=921000; S1G_BW=2   # 2MHz
-#S1G_FREQ=922000; S1G_BW=4    # 4MHz
+S1G_FREQ=922000; S1G_BW=4    # 4MHz
 #S1G_FREQ=916000; S1G_BW=8   # 8MHz
 
 # Free the interface
@@ -23,11 +23,6 @@ iw dev "$IFACE" set type ibss
 ip link set "$IFACE" up
 iw dev "$IFACE" ibss join "$MESH_ID" "$FREQ"
 
-# Set S1G channel and bandwidth (must be after interface is up)
-sleep 2
-morsectrl channel -c "$S1G_FREQ" -o "$S1G_BW" -p 1 -n 0
-morsectrl bw "$S1G_BW"
-
 # Batman
 modprobe batman_adv
 batctl if add "$IFACE"
@@ -36,3 +31,10 @@ ip link set up dev bat0
 # IP on bat0
 ip addr flush dev bat0
 ip addr add "$BAT_IP" dev bat0
+
+# Set S1G channel and bandwidth (after everything is up)
+sleep 3
+morsectrl channel -c "$S1G_FREQ" -o "$S1G_BW" -p 1 -n 0
+morsectrl bw "$S1G_BW"
+sleep 1
+echo "S1G config: $(morsectrl bw) | $(morsectrl channel)"
