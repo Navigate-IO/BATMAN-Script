@@ -2,8 +2,14 @@
 set -e
 IFACE="wlan0"
 MESH_ID="sdmahmesh"
-FREQ="5180"
+FREQ="5200"
 BAT_IP="192.168.50.1/24"    # change to .2 on the second Pi
+
+# S1G channel config — uncomment ONE line:
+S1G_FREQ=920500; S1G_BW=1   # 1MHz
+#S1G_FREQ=921000; S1G_BW=2   # 2MHz
+#S1G_FREQ=922000; S1G_BW=4    # 4MHz
+#S1G_FREQ=916000; S1G_BW=8   # 8MHz
 
 # Free the interface
 batctl if del "$IFACE" 2>/dev/null || true
@@ -11,6 +17,10 @@ systemctl stop wpa_supplicant 2>/dev/null || true
 pkill -f "wpa_supplicant.*$IFACE" 2>/dev/null || true
 iw dev p2p-dev-"$IFACE" del 2>/dev/null || true
 ip link set "$IFACE" down || true
+
+# Set S1G channel and bandwidth
+morsectrl channel -c "$S1G_FREQ" -o "$S1G_BW" -p 1 -n 0
+morsectrl bw "$S1G_BW"
 
 # Set IBSS (ad-hoc) mode
 iw dev "$IFACE" set type ibss
