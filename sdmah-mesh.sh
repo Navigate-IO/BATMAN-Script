@@ -33,7 +33,11 @@ ip addr flush dev bat0
 ip addr add "$BAT_IP" dev bat0
 
 # Set S1G channel and bandwidth (after everything is up)
+sleep 5
+morsectrl channel -c "$S1G_FREQ" -o "$S1G_BW" -p "$S1G_BW" -n 0
+morsectrl bw "$S1G_BW"
 sleep 3
+# Set again in case driver reset it
 morsectrl channel -c "$S1G_FREQ" -o "$S1G_BW" -p "$S1G_BW" -n 0
 morsectrl bw "$S1G_BW"
 sleep 1
