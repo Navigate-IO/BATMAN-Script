@@ -34,7 +34,7 @@ ip addr add "$BAT_IP" dev bat0
 
 # Set S1G channel and bandwidth (after everything is up)
 sleep 3
-morsectrl channel -c "$S1G_FREQ" -o "$S1G_BW" -p 1 -n 0
+morsectrl channel -c "$S1G_FREQ" -o "$S1G_BW" -p "$S1G_BW" -n 0
 morsectrl bw "$S1G_BW"
 sleep 1
 echo "S1G config: $(morsectrl bw) | $(morsectrl channel)"
