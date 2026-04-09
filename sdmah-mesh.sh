@@ -4,7 +4,7 @@ set -e
 IFACE="wlan0"
 MESH_CONF="/home/pi/sx-sdmah/conf/US/mesh_halow_open.conf"
 BAT_IP=""
-MODE="${MODE:-batman}"  # "batman" or "hwmp"
+MODE="${MODE:-batman4}"  # "batman4", "batman5", or "hwmp"
 
 # ─── Get IP address ───
 if [ -n "$BAT_IP" ]; then
@@ -40,13 +40,14 @@ elif [ -t 0 ]; then
     done
 else
     echo "ERROR: No BAT_IP environment variable set and no terminal for input."
-    echo "  Set BAT_IP before running, e.g.: BAT_IP=192.168.50.1/24 MODE=hwmp bash sdmah-mesh.sh"
+    echo "  Set BAT_IP before running, e.g.: BAT_IP=192.168.50.1/24 MODE=batman5 bash sdmah-mesh.sh"
     exit 1
 fi
 
 # ─── Free the interface ───
 batctl if del "$IFACE" 2>/dev/null || true
 ip link set bat0 down 2>/dev/null || true
+ip link del bat0 2>/dev/null || true
 killall wpa_supplicant_s1g 2>/dev/null || true
 killall hostapd_s1g 2>/dev/null || true
 systemctl stop wpa_supplicant 2>/dev/null || true
@@ -59,19 +60,33 @@ echo "  Starting 802.11s mesh (mode: $MODE)..."
 wpa_supplicant_s1g -i "$IFACE" -c "$MESH_CONF" -B
 sleep 5
 
-if [ "$MODE" = "hwmp" ]; then
-    # ─── HWMP: IP directly on wlan0, no batman ───
-    ip addr flush dev "$IFACE"
-    ip addr add "$BAT_IP" dev "$IFACE"
-    echo "  HWMP mesh setup complete. $IFACE IP: $BAT_IP"
-else
-    # ─── Batman IV: IP on bat0 ───
-    modprobe batman_adv
-    batctl if add "$IFACE"
-    ip link set up dev bat0
-    ip addr flush dev bat0
-    ip addr add "$BAT_IP" dev bat0
-    echo "  Batman mesh setup complete. bat0 IP: $BAT_IP"
-fi
+case "$MODE" in
+    hwmp)
+        # ─── HWMP: IP directly on wlan0, no batman ───
+        ip addr flush dev "$IFACE"
+        ip addr add "$BAT_IP" dev "$IFACE"
+        echo "  HWMP mesh setup complete. $IFACE IP: $BAT_IP"
+        ;;
+    batman5)
+        # ─── BATMAN V: throughput-aware routing ───
+        modprobe batman_adv
+        batctl routing_algo BATMAN_V
+        batctl if add "$IFACE"
+        ip link set up dev bat0
+        ip addr flush dev bat0
+        ip addr add "$BAT_IP" dev bat0
+        echo "  BATMAN V mesh setup complete. bat0 IP: $BAT_IP"
+        ;;
+    batman4|*)
+        # ─── BATMAN IV: TQ-based routing (default) ───
+        modprobe batman_adv
+        batctl routing_algo BATMAN_IV
+        batctl if add "$IFACE"
+        ip link set up dev bat0
+        ip addr flush dev bat0
+        ip addr add "$BAT_IP" dev bat0
+        echo "  BATMAN IV mesh setup complete. bat0 IP: $BAT_IP"
+        ;;
+esac
 
 echo "  Bandwidth: $(morsectrl bw 2>/dev/null || echo 'unknown')"
