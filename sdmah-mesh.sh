@@ -4,7 +4,7 @@ set -e
 IFACE="wlan0"
 MESH_CONF="/home/pi/sx-sdmah/conf/US/mesh_halow_open.conf"
 BAT_IP=""
-MODE="${MODE:-batman4}"  # "batman4", "batman5", or "hwmp"
+MODE="${MODE:-batman5}"  # "batman4", "batman5", or "hwmp"
 
 # ─── Get IP address ───
 if [ -n "$BAT_IP" ]; then
